@@ -40,5 +40,36 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn($request) => $request->is('api/*') || $request->expectsJson()
         );
+
+        // Map custom auth exceptions to JSON responses
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\InvalidCredentialsException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
+
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\AccountInactiveException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
+
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\EmailNotVerifiedException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
     })
     ->create();
