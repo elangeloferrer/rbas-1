@@ -5,7 +5,6 @@ use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,13 +15,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Sanctum SPA cookie support — must be in the web group
-        $middleware->web(append: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        ]);
+        // // Sanctum SPA cookie support — must be in the web group
+        // $middleware->web(append: [
+        //     \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        // ]);
 
-        // Apply throttle + JSON header enforcement on all API routes
         $middleware->api(prepend: [
+            // Force Accept: application/json on all API requests
+            \App\Http\Middleware\ForceJsonResponse::class,
+            // Sanctum SPA cookie support for Vue frontend
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            // Apply throttle on all API routes
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
         ]);
 
@@ -40,6 +43,38 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn($request) => $request->is('api/*') || $request->expectsJson()
         );
+
+        // Customize rate limit response with role-specific message and retry_after seconds
+        $exceptions->renderable(function (
+            \Illuminate\Http\Exceptions\ThrottleRequestsException $e,
+            $request
+        ) {
+            $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+
+            $message = match (true) {
+                $request->is('api/admin/*')    => 'Too many admin login attempts. Please wait before retrying.',
+                $request->is('api/merchant/*') => 'Too many merchant requests. Please wait before retrying.',
+                $request->is('api/register'),
+                $request->is('api/login')      => 'Too many requests. Please wait before retrying.',
+                default                        => 'Too many requests. Please wait before retrying.',
+            };
+
+            return response()->json([
+                'success'     => false,
+                'message'     => $message,
+                'retry_after' => $retryAfter,
+            ], 429);
+        });
+
+        // Prevent "Route [login] not defined" — return 401 for unauthenticated API requests
+        $exceptions->renderable(function (
+            \Illuminate\Auth\AuthenticationException $e,
+            $request
+        ) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
+        });
 
         // Map custom auth exceptions to JSON responses
         $exceptions->renderable(function (
@@ -64,6 +99,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->renderable(function (
             \App\Exceptions\Auth\EmailNotVerifiedException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
+
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\RoleNotFoundException $e,
             $request
         ) {
             return response()->json([

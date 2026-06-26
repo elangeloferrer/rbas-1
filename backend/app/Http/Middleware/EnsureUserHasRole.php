@@ -30,7 +30,7 @@ class EnsureUserHasRole
         if (! $hasRole) {
             return response()->json([
                 'success' => false,
-                'message' => 'Forbidden. You do not have the required role.',
+                'message' => 'Forbidden.',
             ], 403);
         }
 

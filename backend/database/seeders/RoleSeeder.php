@@ -14,8 +14,8 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             [
-                'name'        => 'customer',
-                'description' => 'End user who browses and purchases.',
+                'name'        => 'admin',
+                'description' => 'Platform superadministrator',
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ],
@@ -26,8 +26,8 @@ class RoleSeeder extends Seeder
                 'updated_at'  => now(),
             ],
             [
-                'name'        => 'admin',
-                'description' => 'Platform administrator with full access.',
+                'name'        => 'customer',
+                'description' => 'End user who browses and purchases.',
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ],
