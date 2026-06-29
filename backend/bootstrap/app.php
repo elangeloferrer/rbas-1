@@ -116,5 +116,25 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => $e->getMessage(),
             ], $e->getCode());
         });
+
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\InvalidResetTokenException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
+
+        $exceptions->renderable(function (
+            \App\Exceptions\Auth\ExpiredResetTokenException $e,
+            $request
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getCode());
+        });
     })
     ->create();

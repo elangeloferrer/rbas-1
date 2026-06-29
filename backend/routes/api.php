@@ -1,25 +1,38 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\Admin\AuthController as AdminAuthController;
-use App\Http\Controllers\Auth\Customer\AuthController as CustomerAuthController;
-use App\Http\Controllers\Auth\Merchant\AuthController as MerchantAuthController;
-use App\Http\Controllers\Auth\LogoutController;
 
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Auth\Merchant\PasswordResetController;
+
+// Admin Controllers
+use App\Http\Controllers\Auth\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+
+// Merchant Controllers
+use App\Http\Controllers\Auth\Merchant\AuthController as MerchantAuthController;
+use App\Http\Controllers\Auth\Merchant\EmailVerificationController;
 use App\Http\Controllers\Merchant\DashboardController as MerchantDashboardController;
 
-use App\Http\Controllers\Auth\Mobile\Customer\AuthController as MobileCustomerAuthController;
-use App\Http\Controllers\Auth\Mobile\Merchant\AuthController as MobileMerchantAuthController;
+// Customer Controllers
+use App\Http\Controllers\Auth\Customer\AuthController as CustomerAuthController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+
+
+//  Mobile Controllers
 use App\Http\Controllers\Auth\Mobile\LogoutController as MobileLogoutController;
+
+// Mobile - Merchant Controllers
+use App\Http\Controllers\Auth\Mobile\Merchant\AuthController as MobileMerchantAuthController;
+
+// Mobile - Customer Controllers
+use App\Http\Controllers\Auth\Mobile\Customer\AuthController as MobileCustomerAuthController;
 
 /*
 |--------------------------------------------------------------------------
 | Public routes — rate limited to 5 attempts per minute
 |--------------------------------------------------------------------------
 */
-
 // Customer
 Route::middleware('throttle:5,1')
     ->group(function () {
@@ -33,8 +46,9 @@ Route::prefix('merchant')
     ->group(function () {
         Route::post('register', [MerchantAuthController::class, 'register']);
         Route::post('login',    [MerchantAuthController::class, 'login']);
-        // Password reset routes added in Part 9
-        // Email verification routes added in Part 10
+        Route::post('forgot-password',  [PasswordResetController::class, 'forgotPassword']);
+        Route::post('reset-password',   [PasswordResetController::class, 'resetPassword']);
+        Route::post('email/verify',    [EmailVerificationController::class, 'verify']);
     });
 
 // Admin
@@ -67,6 +81,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         ->middleware('role:merchant')
         ->group(function () {
             Route::get('dashboard', [MerchantDashboardController::class, 'index']);
+            Route::post('email/resend', [EmailVerificationController::class, 'resend']);
         });
 
     // Admin protected routes

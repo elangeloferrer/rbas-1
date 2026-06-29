@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // ----------------------------------------------------------------------
+    // Custom application configuration values
+    // ----------------------------------------------------------------------
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
 ];

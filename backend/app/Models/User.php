@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\EmailVerificationService;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -13,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
@@ -80,5 +81,15 @@ class User extends Authenticatable
     public function primaryRole(): ?string
     {
         return $this->roles()->value('name');
+    }
+
+    /**
+     * Override the default Laravel notification to use our custom branded Mailable.
+     * Called by the built-in Illuminate\Auth\Listeners\SendEmailVerificationNotification.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $roleName = $this->primaryRole() ?? 'customer';
+        app(EmailVerificationService::class)->send($this, $roleName);
     }
 }
