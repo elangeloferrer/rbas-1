@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
 
 class EmailVerificationService extends BaseService
 {
@@ -28,17 +29,13 @@ class EmailVerificationService extends BaseService
         $this->attempt(function () use ($user, $roleName) {
             $verificationUrl = $this->buildFrontendVerificationUrl($user, $roleName);
 
-            if ($roleName === 'merchant') {
-                Mail::to($user->email)->send(new MerchantVerifyEmailMail(
-                    verificationUrl: $verificationUrl,
-                    firstName: $user->first_name,
-                ));
-            } else {
-                Mail::to($user->email)->send(new CustomerVerifyEmailMail(
-                    verificationUrl: $verificationUrl,
-                    firstName: $user->first_name,
-                ));
-            }
+            $mailable = match ($roleName) {
+                'merchant' => new MerchantVerifyEmailMail(verificationUrl: $verificationUrl, firstName: $user->first_name),
+                'customer' => new CustomerVerifyEmailMail(verificationUrl: $verificationUrl, firstName: $user->first_name),
+                default    => throw new \InvalidArgumentException("No verification mail defined for role: {$roleName}"),
+            };
+
+            Mail::to($user->email)->send($mailable);
         });
     }
 
@@ -95,7 +92,15 @@ class EmailVerificationService extends BaseService
 
         // Extract only the HMAC query string (expires + signature) from the signed URL.
         // The frontend URL is built directly from known parts — no string replacement needed.
-        $query        = parse_url($signedRoute, PHP_URL_QUERY); // expires=...&signature=...
+        $query = parse_url($signedRoute, PHP_URL_QUERY);
+        if ($query === null) {
+            Log::warning('EmailVerificationService: parse_url returned null', [
+                'user_id'     => $user->id,
+                'signedRoute' => $signedRoute,
+            ]);
+        }
+        $query = $query ?? '';
+
         $frontendBase = rtrim(config('app.frontend_url'), '/');
 
         return "{$frontendBase}/{$roleName}/email/verify/{$user->id}/{$emailHash}?{$query}";

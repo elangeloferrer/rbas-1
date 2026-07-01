@@ -23,14 +23,14 @@ class AuthController extends Controller
             email: $request->email,
             password: $request->password,
             roleName: 'admin',
-            requireEmailVerified: false,
+            requireEmailVerified: true,
         );
 
         return $this->success('Login successful.', [
             'user' => [
                 'first_name' => $result['user']->first_name,
                 'email'      => $result['user']->email,
-                'role'       => $result['user']->primaryRole() ?? 'admin',
+                'role'       => $result['user']->roles->first()?->name ?? 'admin',
             ],
         ]);
     }
@@ -40,7 +40,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout();
+        $this->authService->logout($request);
 
         return $this->success('Logged out successfully.');
     }

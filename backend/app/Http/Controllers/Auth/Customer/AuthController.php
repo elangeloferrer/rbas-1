@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\AuthService;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,7 @@ class AuthController extends Controller
 {
     public function __construct(
         protected AuthService $authService,
+        protected EmailVerificationService $emailVerificationService,
     ) {}
 
     /**
@@ -22,11 +24,13 @@ class AuthController extends Controller
     {
         $user = $this->authService->register($request->validated(), 'customer');
 
+        $this->emailVerificationService->send($user, 'customer');
+
         return $this->success('Account created successfully.', [
             'user' => [
                 'first_name' => $user->first_name,
                 'email'      => $user->email,
-                'role'       => $user->primaryRole() ?? 'customer',
+                'role'       => $user->roles->first()?->name ?? 'customer',
             ],
         ], 201);
     }
@@ -40,7 +44,7 @@ class AuthController extends Controller
             email: $request->email,
             password: $request->password,
             roleName: 'customer',
-            requireEmailVerified: false,
+            requireEmailVerified: true,
         );
 
         return $this->success('Login successful.', [
@@ -58,7 +62,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout();
+        $this->authService->logout($request);
 
         return $this->success('Logged out successfully.');
     }

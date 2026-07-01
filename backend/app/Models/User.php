@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\EmailVerificationService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -80,16 +79,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function primaryRole(): ?string
     {
+        // Use the already-loaded collection to avoid an extra query.
+        // Falls back to a DB query only when roles are not in memory.
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->first()?->name;
+        }
         return $this->roles()->value('name');
     }
 
-    /**
-     * Override the default Laravel notification to use our custom branded Mailable.
-     * Called by the built-in Illuminate\Auth\Listeners\SendEmailVerificationNotification.
-     */
-    public function sendEmailVerificationNotification(): void
-    {
-        $roleName = $this->primaryRole() ?? 'customer';
-        app(EmailVerificationService::class)->send($this, $roleName);
-    }
 }

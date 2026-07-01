@@ -100,13 +100,14 @@ class PasswordResetService extends BaseService
                 throw new InvalidResetTokenException();
             }
 
-            $this->users->update($user, ['password' => $newPassword]);
-
-            // Delete the used token so it cannot be reused
-            DB::table('password_reset_tokens')->where('email', $email)->delete();
-
-            // Revoke all Sanctum tokens to force re-login with the new password
-            $user->tokens()->delete();
+            DB::transaction(function () use ($user, $email, $newPassword) {
+                // Update the user's password (hashed automatically by the User model)
+                $this->users->update($user, ['password' => $newPassword]);
+                // Delete the used token so it cannot be reused
+                DB::table('password_reset_tokens')->where('email', $email)->delete();
+                // Revoke all Sanctum tokens to force re-login with the new password
+                $user->tokens()->delete();
+            });
         });
     }
 }

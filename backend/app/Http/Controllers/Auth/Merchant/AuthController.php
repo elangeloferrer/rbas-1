@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\AuthService;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     public function __construct(
-        protected AuthService $authService,
+        protected AuthService              $authService,
+        protected EmailVerificationService $emailVerificationService,
     ) {}
 
     /**
@@ -23,9 +25,7 @@ class AuthController extends Controller
     {
         $user = $this->authService->register($request->validated(), 'merchant');
 
-        // Fire the Registered event so the email verification listener triggers.
-        // The listener and Mailable are built in Part 10.
-        event(new \Illuminate\Auth\Events\Registered($user));
+        $this->emailVerificationService->send($user, 'merchant');
 
         return $this->success(
             'Account created. Please check your email to verify your address.',
@@ -33,7 +33,7 @@ class AuthController extends Controller
                 'user' => [
                     'first_name' => $user->first_name,
                     'email'      => $user->email,
-                    'role'       => $user->primaryRole() ?? 'merchant',
+                    'role'       => $user->roles->first()?->name ?? 'merchant',
                 ],
             ],
             201
@@ -49,7 +49,7 @@ class AuthController extends Controller
             email: $request->email,
             password: $request->password,
             roleName: 'merchant',
-            requireEmailVerified: false,
+            requireEmailVerified: true,
         );
 
         return $this->success('Login successful.', [
@@ -67,7 +67,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout();
+        $this->authService->logout($request);
 
         return $this->success('Logged out successfully.');
     }
