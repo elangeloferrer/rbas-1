@@ -46,6 +46,24 @@ export const useAuthStore = defineStore('auth', {
       await this.fetchUser()
     },
 
+    async merchantLogin(payload: LoginPayload): Promise<void> {
+      await getCsrfCookie()
+      await api.post('/merchant/login', payload)
+      await this.fetchUser()
+    },
+
+    async merchantRegister(payload: RegisterPayload): Promise<void> {
+      await getCsrfCookie()
+      await api.post('/merchant/register', payload)
+      await this.fetchUser()
+    },
+
+    async adminLogin(payload: LoginPayload): Promise<void> {
+      await getCsrfCookie()
+      await api.post('/admin/login', payload)
+      await this.fetchUser()
+    },
+
     async logout(): Promise<void> {
       await api.post('/logout')
       this.clearAuth()

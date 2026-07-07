@@ -10,5 +10,6 @@ export default antfu({
   rules: {
     'no-console': ['warn', { allow: ['warn', 'error'] }], // Allow console.warn and console.error; disallow console.log in production code
     'vue/component-name-in-template-casing': ['error', 'PascalCase'], // Enforce consistent component name casing in templates
+    'antfu/if-newline': 'off',
   },
 })
