@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { toast } from 'vue3-toastify'
+import { useRoute, useRouter } from 'vue-router'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,8 +25,16 @@ import { useAuthRedirect } from '@/composables/useAuthRedirect'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const { redirectAfterLogin } = useAuthRedirect()
 const isLoading = ref(false)
+
+onMounted(() => {
+  if (route.query.verified === '1') {
+    toast.success('Email verified! You can now sign in to your merchant account.')
+  }
+})
 
 const schema = toTypedSchema(
   z.object({
@@ -44,6 +53,11 @@ const onSubmit = handleSubmit(async (values) => {
     await redirectAfterLogin()
   }
   catch (e: any) {
+    if (e?.response?.status === 403) {
+      // Email not verified — send them to the resend page so they don't hit a dead end
+      router.push({ path: '/verify-email', query: { email: values.email, role: 'merchant' } })
+      return
+    }
     toast.error(e?.response?.data?.message ?? 'Login failed. Please try again.')
   }
   finally {

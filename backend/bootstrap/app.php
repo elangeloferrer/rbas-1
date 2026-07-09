@@ -63,7 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'success'     => false,
                 'message'     => $message,
                 'retry_after' => $retryAfter,
-            ], 429);
+            ], 429)->header('Retry-After', $retryAfter);
         });
 
         // Prevent "Route [login] not defined" — return 401 for unauthenticated API requests

@@ -3,6 +3,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue3-toastify'
+import { useRouter } from 'vue-router'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,11 +22,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useAuthRedirect } from '@/composables/useAuthRedirect'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
-const { redirectAfterLogin } = useAuthRedirect()
+const router = useRouter()
 const isLoading = ref(false)
 
 // Tracks current password value so the schema can close over it reactively
@@ -66,8 +66,7 @@ const onSubmit = handleSubmit(async (values) => {
   isLoading.value = true
   try {
     await auth.register(values)
-    toast.success('Account created! Welcome aboard.')
-    await redirectAfterLogin()
+    router.push({ path: '/verify-email', query: { email: values.email } })
   }
   catch (e: any) {
     const errors = e?.response?.data?.errors

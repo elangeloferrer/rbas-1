@@ -66,7 +66,7 @@ const onSubmit = handleSubmit(async (values) => {
   isLoading.value = true
   try {
     await auth.merchantRegister(values)
-    toast.success('Merchant account created! Welcome.')
+    toast.success('Welcome! A verification email has been sent to your inbox.')
     await redirectAfterLogin()
   }
   catch (e: any) {

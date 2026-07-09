@@ -30,11 +30,22 @@ const router = createRouter({
       component: () => import('@/views/customer/auth/Register.vue'),
       meta: { guestOnly: true },
     },
-    // {
-    //   path: '/dashboard',
-    //   component: () => import('@/views/customer/Dashboard.vue'),
-    //   meta: { requiresAuth: true, role: 'customer' },
-    // },
+    // ── Shared: email verification ────────────────────────────────
+    {
+      // "Check your inbox" page — shown immediately after registration
+      path: '/verify-email',
+      component: () => import('@/views/shared/EmailVerificationPending.vue'),
+    },
+    {
+      // Handles the link the user clicks in their inbox (customer role)
+      path: '/customer/email/verify/:id/:hash',
+      component: () => import('@/views/shared/EmailVerifyCallback.vue'),
+    },
+    {
+      // Handles the link the user clicks in their inbox (merchant role)
+      path: '/merchant/email/verify/:id/:hash',
+      component: () => import('@/views/shared/EmailVerifyCallback.vue'),
+    },
 
     // ── Merchant ─────────────────────────────────────────────────
     {
@@ -73,9 +84,16 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  // Fetch the authenticated user once per session (lazy init)
+  // Lazy init: only hit the server when there's a persisted user to validate.
+  // If user is null there's nothing to confirm — skip the round-trip and mark
+  // as initialized so this block never runs again this session.
   if (!auth.initialized) {
-    await auth.fetchUser()
+    if (auth.user !== null) {
+      await auth.fetchUser()
+    }
+    else {
+      auth.initialized = true
+    }
   }
 
   // Redirect authenticated users away from guest-only pages (e.g. /login)

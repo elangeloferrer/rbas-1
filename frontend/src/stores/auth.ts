@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', {
         return '/admin/dashboard'
       if (state.user?.role === 'merchant')
         return '/merchant/dashboard'
-      return '/dashboard'
+      return '/homepage'
     },
   },
 
@@ -43,6 +43,7 @@ export const useAuthStore = defineStore('auth', {
     async register(payload: RegisterPayload): Promise<void> {
       await getCsrfCookie()
       await api.post('/register', payload)
+      // Backend calls Auth::login() during registration (Soft Gate UX) — hydrate the store.
       await this.fetchUser()
     },
 
@@ -55,6 +56,8 @@ export const useAuthStore = defineStore('auth', {
     async merchantRegister(payload: RegisterPayload): Promise<void> {
       await getCsrfCookie()
       await api.post('/merchant/register', payload)
+      // fetchUser() here because the backend calls Auth::login() during merchant registration
+      // (Soft Gate UX) — a session is created, so we can hydrate the store immediately.
       await this.fetchUser()
     },
 

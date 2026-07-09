@@ -4,6 +4,7 @@ export interface AuthUser {
   first_name: string
   email: string
   role: UserRole
+  is_email_verified: boolean
 }
 
 export interface LoginPayload {

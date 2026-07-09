@@ -9,6 +9,7 @@ use App\Services\AuthService;
 use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -26,11 +27,17 @@ class AuthController extends Controller
 
         $this->emailVerificationService->send($user, 'customer');
 
+        // Auto-login so the session exists immediately after registration.
+        // This allows the protected resend endpoint to be called from /verify-email
+        // without requiring the customer to have verified their email first.
+        Auth::login($user);
+
         return $this->success('Account created successfully.', [
             'user' => [
-                'first_name' => $user->first_name,
-                'email'      => $user->email,
-                'role'       => $user->roles->first()?->name ?? 'customer',
+                'first_name'        => $user->first_name,
+                'email'             => $user->email,
+                'role'              => $user->roles->first()?->name ?? 'customer',
+                'is_email_verified' => false,
             ],
         ], 201);
     }

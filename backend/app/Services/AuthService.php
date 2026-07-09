@@ -79,10 +79,10 @@ class AuthService extends BaseService
                 throw new AccountInactiveException();
             }
 
-            // Email not verified
-            if ($requireEmailVerified && is_null($user->email_verified_at)) {
-                throw new EmailNotVerifiedException();
-            }
+            // // Email not verified
+            // if ($requireEmailVerified && is_null($user->email_verified_at)) {
+            //     throw new EmailNotVerifiedException();
+            // }
 
             // SPA (Vue): start an httpOnly session — no token exposed to JS
             Auth::login($user);
