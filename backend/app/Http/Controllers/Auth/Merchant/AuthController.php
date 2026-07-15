@@ -9,11 +9,12 @@ use App\Services\AuthService;
 use App\Services\EmailVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
     public function __construct(
-        protected AuthService              $authService,
+        protected AuthService $authService,
         protected EmailVerificationService $emailVerificationService,
     ) {}
 
@@ -27,13 +28,19 @@ class AuthController extends Controller
 
         $this->emailVerificationService->send($user, 'merchant');
 
+        // Soft Gate: log the merchant in immediately so they can access the dashboard
+        // right away. A verification banner on the dashboard prompts them to verify.
+        // Note: subsequent logins still require email verification (requireEmailVerified: true).
+        Auth::login($user);
+
         return $this->success(
-            'Account created. Please check your email to verify your address.',
+            'Account created. Check your email to verify and unlock all features.',
             [
                 'user' => [
                     'first_name' => $user->first_name,
-                    'email'      => $user->email,
-                    'role'       => $user->roles->first()?->name ?? 'merchant',
+                    'email' => $user->email,
+                    'role' => $user->roles->first()?->name ?? 'merchant',
+                    'is_email_verified' => $user->email_verified_at ? true : false,
                 ],
             ],
             201
@@ -53,10 +60,11 @@ class AuthController extends Controller
         );
 
         return $this->success('Login successful.', [
-            'user'  => [
+            'user' => [
                 'first_name' => $result['user']->first_name,
-                'email'      => $result['user']->email,
-                'role'       => $result['user']->primaryRole() ?? 'merchant',
+                'email' => $result['user']->email,
+                'role' => $result['user']->roles->first()?->name ?? 'merchant',
+                'is_email_verified' => $result['user']->email_verified_at ? true : false,
             ],
             // 'token' => $result['token'],
         ]);

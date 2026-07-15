@@ -1,0 +1,22 @@
+root = true
+
+# Baseline for all files not covered by a closer .editorconfig.
+# backend/.editorconfig has root = true so it takes precedence for
+# everything under backend/ — this file covers frontend/ and repo-root files.
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.php]
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2

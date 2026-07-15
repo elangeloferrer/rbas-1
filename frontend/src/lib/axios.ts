@@ -4,14 +4,14 @@ const api = axios.create({
   baseURL: '/api',
   withCredentials: true,
   headers: {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
 })
 
 api.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
       const { useAuthStore } = await import('@/stores/auth')
@@ -23,11 +23,9 @@ api.interceptors.response.use(
         const path = router.currentRoute.value.path
         if (path.startsWith('/admin')) {
           await router.push('/admin/login')
-        }
-        else if (path.startsWith('/merchant')) {
+        } else if (path.startsWith('/merchant')) {
           await router.push('/merchant/login')
-        }
-        else {
+        } else {
           await router.push('/login')
         }
       }

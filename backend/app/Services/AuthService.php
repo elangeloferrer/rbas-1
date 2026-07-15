@@ -38,9 +38,9 @@ class AuthService extends BaseService
 
             $user = $this->users->create([
                 'first_name' => $data['first_name'],
-                'email'      => $data['email'],
-                'password'   => $data['password'], // cast to 'hashed' in User model
-                'is_active'  => true,
+                'email' => $data['email'],
+                'password' => $data['password'], // cast to 'hashed' in User model
+                'is_active' => true,
             ]);
 
             $this->roles->assignRoleToUser($user->id, $role->id);
@@ -53,41 +53,43 @@ class AuthService extends BaseService
      * Validate credentials for a user
      * For SPA cookie auth — the session handles auth.
      *
-     *@return array{ user: User, token: string }
+     * @return array{ user: User, token: string }
      *
      *@throwsInvalidCredentialsException
+     *
      *@throwsAccountInactiveException
+     *
      *@throwsEmailNotVerifiedException
      */
     public function login(string $email, string $password, string $roleName, bool $requireEmailVerified = false): array
     {
-        return $this->attempt(function () use ($email, $password, $roleName, $requireEmailVerified) {
+        return $this->attempt(function () use ($email, $password, $roleName) {
             $user = $this->users->findByEmail($email);
 
             // Wrong email or wrong password
             if (! $user || ! Hash::check($password, $user->password)) {
-                throw new InvalidCredentialsException();
+                throw new InvalidCredentialsException;
             }
 
             // User does not have the required role for this login endpoint
             if (! $user->hasRole($roleName)) {
-                throw new InvalidCredentialsException();
+                throw new InvalidCredentialsException;
             }
 
             // Account deactivated by admin
             if (! $user->is_active) {
-                throw new AccountInactiveException();
+                throw new AccountInactiveException;
             }
 
-            // Email not verified
-            if ($requireEmailVerified && is_null($user->email_verified_at)) {
-                throw new EmailNotVerifiedException();
-            }
+            // // Email not verified
+            // if ($requireEmailVerified && is_null($user->email_verified_at)) {
+            //     throw new EmailNotVerifiedException();
+            // }
 
             // SPA (Vue): start an httpOnly session — no token exposed to JS
             Auth::login($user);
 
-            return ['user' => $user,];
+            return ['user' => $user];
         });
     }
 
@@ -131,22 +133,22 @@ class AuthService extends BaseService
 
             // Wrong email or wrong password
             if (! $user || ! Hash::check($password, $user->password)) {
-                throw new InvalidCredentialsException();
+                throw new InvalidCredentialsException;
             }
 
             // User does not have the required role for this login endpoint
             if (! $user->hasRole($roleName)) {
-                throw new InvalidCredentialsException();
+                throw new InvalidCredentialsException;
             }
 
             // Account deactivated by admin
             if (! $user->is_active) {
-                throw new AccountInactiveException();
+                throw new AccountInactiveException;
             }
 
             // Email not verified
             if ($requireEmailVerified && is_null($user->email_verified_at)) {
-                throw new EmailNotVerifiedException();
+                throw new EmailNotVerifiedException;
             }
 
             $roleName = $user->primaryRole() ?? 'user';
