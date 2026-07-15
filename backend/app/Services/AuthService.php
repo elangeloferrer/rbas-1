@@ -100,8 +100,12 @@ class AuthService extends BaseService
     {
         $this->attempt(function () use ($request) {
             Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            // Guard against stateless (Bearer token) requests where session middleware
+            // is not in the pipeline — $request->session() would throw without this.
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
         });
     }
 
