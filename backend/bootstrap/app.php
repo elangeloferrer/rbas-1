@@ -1,16 +1,28 @@
 <?php
 
+use App\Exceptions\Auth\AccountInactiveException;
+use App\Exceptions\Auth\EmailNotVerifiedException;
+use App\Exceptions\Auth\ExpiredResetTokenException;
+use App\Exceptions\Auth\InvalidCredentialsException;
+use App\Exceptions\Auth\InvalidResetTokenException;
+use App\Exceptions\Auth\RoleNotFoundException;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\ForceJsonResponse;
+use App\Providers\RepositoryServiceProvider;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Routing\Middleware\ThrottleRequests;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        api: __DIR__ . '/../routes/api.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
         apiPrefix: 'api',
         health: '/up',
     )
@@ -22,53 +34,53 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(prepend: [
             // Force Accept: application/json on all API requests
-            \App\Http\Middleware\ForceJsonResponse::class,
+            ForceJsonResponse::class,
             // Sanctum SPA cookie support for Vue frontend
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            EnsureFrontendRequestsAreStateful::class,
             // Apply throttle on all API routes
-            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
+            ThrottleRequests::class.':api',
         ]);
 
         // Named middleware aliases for use in routes
         $middleware->alias([
-            'role'   => EnsureUserHasRole::class,
+            'role' => EnsureUserHasRole::class,
             'active' => EnsureUserIsActive::class,
         ]);
     })
     ->withProviders([
-        App\Providers\RepositoryServiceProvider::class,
+        RepositoryServiceProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions) {
         // Return JSON for all API exceptions
         $exceptions->shouldRenderJsonWhen(
-            fn($request) => $request->is('api/*') || $request->expectsJson()
+            fn ($request) => $request->is('api/*') || $request->expectsJson()
         );
 
         // Customize rate limit response with role-specific message and retry_after seconds
         $exceptions->renderable(function (
-            \Illuminate\Http\Exceptions\ThrottleRequestsException $e,
+            ThrottleRequestsException $e,
             $request
         ) {
             $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 60);
 
             $message = match (true) {
-                $request->is('api/admin/*')    => 'Too many admin login attempts. Please wait before retrying.',
+                $request->is('api/admin/*') => 'Too many admin login attempts. Please wait before retrying.',
                 $request->is('api/merchant/*') => 'Too many merchant requests. Please wait before retrying.',
                 $request->is('api/register'),
-                $request->is('api/login')      => 'Too many requests. Please wait before retrying.',
-                default                        => 'Too many requests. Please wait before retrying.',
+                $request->is('api/login') => 'Too many requests. Please wait before retrying.',
+                default => 'Too many requests. Please wait before retrying.',
             };
 
             return response()->json([
-                'success'     => false,
-                'message'     => $message,
+                'success' => false,
+                'message' => $message,
                 'retry_after' => $retryAfter,
-            ], 429);
+            ], 429)->header('Retry-After', $retryAfter);
         });
 
         // Prevent "Route [login] not defined" — return 401 for unauthenticated API requests
         $exceptions->renderable(function (
-            \Illuminate\Auth\AuthenticationException $e,
+            AuthenticationException $e,
             $request
         ) {
             if ($request->is('api/*') || $request->expectsJson()) {
@@ -78,7 +90,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Map custom auth exceptions to JSON responses
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\InvalidCredentialsException $e,
+            InvalidCredentialsException $e,
             $request
         ) {
             return response()->json([
@@ -88,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\AccountInactiveException $e,
+            AccountInactiveException $e,
             $request
         ) {
             return response()->json([
@@ -98,7 +110,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\EmailNotVerifiedException $e,
+            EmailNotVerifiedException $e,
             $request
         ) {
             return response()->json([
@@ -108,7 +120,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\RoleNotFoundException $e,
+            RoleNotFoundException $e,
             $request
         ) {
             return response()->json([
@@ -118,7 +130,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\InvalidResetTokenException $e,
+            InvalidResetTokenException $e,
             $request
         ) {
             return response()->json([
@@ -128,7 +140,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (
-            \App\Exceptions\Auth\ExpiredResetTokenException $e,
+            ExpiredResetTokenException $e,
             $request
         ) {
             return response()->json([

@@ -1,0 +1,14 @@
+# Build output
+dist/
+dist-ssr/
+
+# Dependencies
+node_modules/
+
+# Lock files — never reformat these
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Vite / local env
+*.local

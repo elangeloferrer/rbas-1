@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -49,8 +47,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_active'         => 'boolean',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -84,7 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($this->relationLoaded('roles')) {
             return $this->roles->first()?->name;
         }
+
         return $this->roles()->value('name');
     }
-
 }

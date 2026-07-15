@@ -1,20 +1,34 @@
 {
   "compilerOptions": {
     "composite": true,
-    "noEmit": true,
+
+    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
+    // Specified here to keep it out of the root directory.
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "es2023",
     "lib": ["ES2023"],
-    "types": ["node"],
-    "module": "nodenext",
+
     "moduleDetection": "force",
+    "module": "nodenext",
+
+    // Include Node.js types and avoid accidentally including other `@types/*` packages.
+    "types": ["node"],
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+
+    // Disable emitting output during `vue-tsc --build`, which is used for type-checking only.
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "skipLibCheck": true
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.*"
+    // "vitest.config.*",
+    // "cypress.config.*",
+    // "playwright.config.*",
+    // "eslint.config.*"
+  ]
 }

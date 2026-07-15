@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+# Frontend — Prettier via lint-staged
+# Runs prettier --write on staged .js/.ts/.vue/.css/.html/.json/.md files.
+# lint-staged config lives in frontend/package.json.
+(cd frontend && npx lint-staged)
+
+# Backend — Pint on staged .php files only
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$')
+if [ -n "$STAGED_PHP" ]; then
+  (cd backend && ./vendor/bin/pint --dirty)
+  echo "$STAGED_PHP" | xargs git add
+fi

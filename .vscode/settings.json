@@ -1,9 +1,38 @@
 {
-  // ── Global ────────────────────────────────────────────────────
-  "prettier.enable": false,
+  // ── Global default ─────────────────────────────────────────────
   "editor.formatOnSave": false,
 
-  // ── Frontend (Vue / TS / JS) — ESLint handles formatting ──────
+  // ── Frontend — Prettier formats on Cmd+S ──────────────────────
+  "[vue]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ── ESLint — lint only, no formatting ─────────────────────────
   "eslint.useFlatConfig": true,
   "eslint.workingDirectories": [
     { "directory": "./frontend", "changeProcessCWD": true }
@@ -12,15 +41,9 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "never"
   },
-  "eslint.validate": [
-    "javascript",
-    "typescript",
-    "vue",
-    "css",
-    "html"
-  ],
+  "eslint.validate": ["javascript", "typescript", "vue"],
 
-  // ── Backend (PHP / Blade) — Pint via Intelephense ─────────────
+  // ── Backend — PHP and Blade ────────────────────────────────────
   "[php]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
