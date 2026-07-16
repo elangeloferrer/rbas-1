@@ -6,7 +6,7 @@
 (cd frontend && npx lint-staged)
 
 # Backend — Pint on staged .php files only
-STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$')
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$' || true)
 if [ -n "$STAGED_PHP" ]; then
   (cd backend && ./vendor/bin/pint --dirty)
   echo "$STAGED_PHP" | xargs git add

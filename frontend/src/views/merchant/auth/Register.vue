@@ -49,7 +49,10 @@ const validationSchema = computed(() =>
   ),
 )
 
-const { handleSubmit, values } = useForm({ validationSchema })
+const { handleSubmit, values } = useForm({
+  validationSchema,
+  initialValues: { first_name: '', email: '', password: '', password_confirmation: '' },
+})
 
 watch(
   () => values.password,
