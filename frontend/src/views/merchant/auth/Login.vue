@@ -25,7 +25,10 @@ const schema = toTypedSchema(
   }),
 )
 
-const { handleSubmit } = useForm({ validationSchema: schema })
+const { handleSubmit } = useForm({
+  validationSchema: schema,
+  initialValues: { email: '', password: '' },
+})
 
 const onSubmit = handleSubmit(async (values) => {
   isLoading.value = true
